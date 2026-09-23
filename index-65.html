@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f6f7fa">
+<title>CompanyVault</title>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CompanyVault">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.462.0/lucide.min.js"></script>
+<style>
+:root{--ink:#15171c;--ink-soft:#343840;--muted:#8b909b;--muted-2:#a9adb6;--line:rgba(26,31,42,.08);--line-strong:rgba(26,31,42,.13);--blue:#1769e0;--blue-dark:#075bd0;--blue-soft:#edf4ff;--blue-wash:#f5f8ff;--green:#1b9c68;--red:#c84b57;--amber:#b8740b;--bg:#f6f7fa;--white:#fff;--radius:18px;--radius-sm:12px;--shadow:0 12px 38px rgba(25,33,52,.045);--shadow-hover:0 16px 42px rgba(25,33,52,.085)}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;background:radial-gradient(circle at 72% -12%,#fff 0,#f7f8fb 35%,var(--bg) 70%);color:var(--ink);font:15px -apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.15px}
+button,input,select,textarea{font:inherit}
+button{transition:background .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease;cursor:pointer}
+button:active{transform:scale(.98)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(23,105,224,.22);outline-offset:2px}
+svg.i{width:18px;height:18px;stroke-width:2}
+a{color:inherit}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;font-weight:640;color:var(--ink-soft);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line-strong);border-radius:11px;background:#fbfbfd;font-size:14.5px}
+.field input:focus,.field select:focus,.field textarea:focus{background:#fff;border-color:var(--blue)}
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:640;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 8px 20px rgba(23,105,224,.22)}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line-strong)}
+.btn-ghost:hover{background:rgba(30,39,55,.04)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-block{width:100%}
+
+/* ---------- App shell ---------- */
+#app{display:none;min-height:100vh}
+.app-shell{display:flex;min-height:100vh}
+.side{width:250px;display:flex;flex-direction:column;background:rgba(250,251,253,.78);border-right:1px solid var(--line);padding:26px 15px 18px;flex-shrink:0;backdrop-filter:blur(28px);position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{font-size:21px;letter-spacing:-1px;font-weight:760;padding:3px 12px 30px;display:flex;align-items:center;gap:10px}
+.brand:before{content:'CV';display:grid;place-items:center;width:32px;height:32px;background:linear-gradient(145deg,#1769e0,#0d4fae);color:#fff;border-radius:10px;font-size:12px;font-weight:800}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{width:100%;display:flex;align-items:center;gap:11px;text-align:left;background:transparent;border:0;color:#777d89;padding:10.5px 13px;margin:0;border-radius:12px;font-weight:560;font-size:14px}
+.nav button.active{background:var(--blue-soft);color:var(--blue);font-weight:660}
+.nav button:hover:not(.active){background:rgba(30,39,55,.045);color:var(--ink-soft)}
+.nav-sep{height:1px;background:var(--line);margin:12px 10px}
+.side-foot{margin-top:auto;padding:14px 13px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.side-foot strong{display:block;color:var(--ink-soft);font-size:13px;margin-bottom:2px}
+.side-foot button{margin-top:10px;font-size:12.5px}
+
+main{flex:1;min-width:0;padding:26px 32px 60px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.h1{font-size:23px;font-weight:740;letter-spacing:-.3px;margin:0}
+.sub{color:var(--muted);font-size:13.5px;margin:2px 0 0}
+.spacer{flex:1}
+.search-global{position:relative;flex:1;max-width:480px}
+.search-global input{width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:1px solid var(--line-strong);background:#fff;font-size:14px}
+.search-global svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+
+.grid{display:grid;gap:16px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+@media (max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.card:hover{box-shadow:var(--shadow-hover)}
+.stat-label{font-size:12.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.stat-value{font-size:26px;font-weight:760;margin-top:6px}
+
+.company-card{display:flex;align-items:center;gap:14px;cursor:pointer}
+.company-avatar{width:42px;height:42px;border-radius:12px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:760;font-size:15px;flex-shrink:0}
+.company-name{font-weight:660;font-size:14.5px}
+.company-meta{color:var(--muted);font-size:12.5px;margin-top:1px}
+
+.section-title{font-size:14.5px;font-weight:680;margin:28px 0 12px;display:flex;align-items:center;gap:8px}
+
+.doc-list{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.doc-row{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);cursor:pointer}
+.doc-row:last-child{border-bottom:0}
+.doc-row:hover{background:var(--blue-wash)}
+.doc-icon{width:38px;height:38px;border-radius:10px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;flex-shrink:0}
+.doc-main{min-width:0;flex:1}
+.doc-name{font-weight:620;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{color:var(--muted);font-size:12px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:640;padding:2px 8px;border-radius:20px}
+.doc-actions{display:flex;gap:4px;flex-shrink:0}
+.icon-btn{border:0;background:transparent;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:hover{background:rgba(30,39,55,.06);color:var(--ink)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty svg{width:36px;height:36px;margin-bottom:10px;opacity:.5}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line-strong);background:#fff;border-radius:20px;padding:7px 13px;font-size:13px;font-weight:560;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+.chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+select.chip-select{border:1px solid var(--line-strong);background:#fff;border-radius:20px;padding:7px 13px;font-size:13px;color:var(--ink-soft)}
+
+.skeleton{background:linear-gradient(90deg,#f0f1f4 25%,#f7f8fa 37%,#f0f1f4 63%);background-size:400% 100%;animation:sk 1.4s ease infinite;border-radius:10px}
+@keyframes sk{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.sk-row{height:60px;margin-bottom:2px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,18,28,.42);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:22px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(10,15,30,.25)}
+.modal-header{display:flex;align-items:center;gap:12px;padding:20px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+.modal-title{font-size:17px;font-weight:700;margin:0}
+.modal-body{padding:20px 22px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}
+.close-x{margin-left:auto;background:transparent;border:0;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--muted)}
+.close-x:hover{background:rgba(30,39,55,.06)}
+
+.dropzone{border:1.5px dashed var(--line-strong);border-radius:16px;padding:30px 16px;text-align:center;color:var(--muted);cursor:pointer}
+.dropzone.drag{border-color:var(--blue);background:var(--blue-wash);color:var(--blue)}
+.dropzone svg{width:26px;height:26px;margin-bottom:8px}
+.file-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.file-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.progress{height:5px;border-radius:3px;background:var(--line);overflow:hidden;width:80px;flex-shrink:0}
+.progress-bar{height:100%;background:var(--blue);width:0%;transition:width .2s}
+.status-ok{color:var(--green)}.status-err{color:var(--red)}
+
+.preview-area{background:#f3f4f7;border-radius:14px;min-height:260px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden}
+.preview-area img{max-width:100%;max-height:420px;object-fit:contain}
+.preview-area iframe{width:100%;height:420px;border:0}
+.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:200}
+.toast{background:#1c1f29;color:#fff;padding:11px 16px;border-radius:12px;font-size:13.5px;box-shadow:0 12px 30px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;animation:toastIn .25s ease}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.badge-role{font-size:11px;font-weight:660;padding:2px 8px;border-radius:20px;background:var(--blue-soft);color:var(--blue);text-transform:capitalize}
+.member-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.avatar-round{width:34px;height:34px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:700;font-size:13px}
+
+/* mobile */
+.hamburger{display:none;background:transparent;border:0;width:36px;height:36px;border-radius:10px}
+.mobile-nav{display:none}
+@media (max-width:860px){
+  .side{position:fixed;left:0;top:0;z-index:60;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 0 1px transparent}
+  .side.open{transform:translateX(0);box-shadow:20px 0 60px rgba(0,0,0,.2)}
+  .hamburger{display:grid;place-items:center}
+  main{padding:18px 16px 90px}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .topbar{flex-wrap:wrap}
+  .search-global{max-width:none;order:3;width:100%}
+  .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border-top:1px solid var(--line);z-index:55;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+  .mobile-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--muted);font-size:10.5px;padding:6px 2px;border-radius:10px}
+  .mobile-nav button.active{color:var(--blue)}
+  .side-scrim{display:none;position:fixed;inset:0;background:rgba(10,15,28,.35);z-index:59}
+  .side-scrim.show{display:block}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+<div class="side-scrim" id="scrim"></div>
+<div class="app-shell">
+  <aside class="side" id="side">
+    <div class="brand">CompanyVault</div>
+    <nav class="nav" id="navMain">
+      <button data-view="home"><svg class="i" data-lucide="layout-dashboard"></svg>Home</button>
+      <button data-view="alldocs"><svg class="i" data-lucide="files"></svg>All Documents</button>
+      <button data-view="companies"><svg class="i" data-lucide="building-2"></svg>Companies</button>
+      <button data-view="categories"><svg class="i" data-lucide="folder-tree"></svg>Categories</button>
+      <button data-view="starred"><svg class="i" data-lucide="star"></svg>Starred</button>
+      <button data-view="recent"><svg class="i" data-lucide="clock"></svg>Recently Viewed</button>
+      <button data-view="trash"><svg class="i" data-lucide="trash-2"></svg>Trash</button>
+      <div class="nav-sep"></div>
+      <button data-view="team"><svg class="i" data-lucide="users"></svg>Team &amp; Access</button>
+      <button data-view="activity"><svg class="i" data-lucide="activity"></svg>Activity Log</button>
+      <button data-view="settings"><svg class="i" data-lucide="settings"></svg>Settings</button>
+    </nav>
+    <div class="side-foot">
+      <strong id="meName">—</strong>
+      <span id="meEmail">—</span>
+      <button class="btn btn-ghost btn-block" id="signOutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburger"><svg class="i" data-lucide="menu"></svg></button>
+      <div>
+        <h1 class="h1" id="viewTitle">Home</h1>
+        <p class="sub" id="viewSub"></p>
+      </div>
+      <div class="spacer"></div>
+      <div class="search-global">
+        <svg class="i" data-lucide="search"></svg>
+        <input id="globalSearch" placeholder="Search documents, companies, tags…">
+      </div>
+      <button class="btn btn-primary" id="quickUploadBtn"><svg class="i" data-lucide="upload"></svg><span style="display:none" class="qtxt">Upload</span></button>
+    </div>
+
+    <div id="viewRoot"></div>
+  </main>
+</div>
+</div>
+
+<!-- Upload modal -->
+<div class="overlay" id="uploadOverlay">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Upload documents</h3><button class="close-x" data-close="uploadOverlay"><svg class="i" data-lucide="x"></svg></button></div>
+    <div class="modal-body">
+      <div class="field"><label>Company</label><select id="upCompany"></select></div>
+      <div class="field"><label>Category</label><select id="upCategory"></select></div>
+      <div class="field"><label>Tags (comma separated, optional)</label><input id="upTags" placeholder="e.g. 2026, renewal, urgent"></div>
+      <div id="dropzone" class="dropzone">
+        <svg class="i" data-lucide="upload-cloud"></svg>
+        <div>Drag files here, or <strong>click to browse</strong></div>
+        <div style="font-size:12px;margin-top:4px">PDF, images, Office files — multiple at once</div>
+        <input type="file" id="fileInput" multiple style="display:none">
+      </div>
+      <div id="fileList" style="margin-top:12px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="uploadOverlay">Close</button>
+      <button class="btn btn-primary" id="startUploadBtn">Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview modal -->
+<div class="overlay" id="previewOverlay">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="pvName">Document</h3>
+      <button class="close-x" data-close="previewOverlay"><svg class="i" data-lucide="x"></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-area" id="pvArea"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn btn-ghost" id="pvDownload"><svg class="i" data-lucide="download"></svg>Download</button>
+        <button class="btn btn-ghost" id="pvPrint"><svg class="i" data-lucide="printer"></svg>Print</button>
+        <button class="btn btn-ghost" id="pvShare"><svg class="i" data-lucide="share-2"></svg>Share</button>
+        <button class="btn btn-ghost" id="pvStar"><svg class="i" data-lucide="star"></svg><span id="pvStarTxt">Star</span></button>
+        <button class="btn btn-ghost" id="pvEdit"><svg class="i" data-lucide="pencil"></svg>Edit</button>
+        <button class="btn btn-danger" id="pvDelete"><svg class="i" data-lucide="trash-2"></svg>Delete</button>
+      </div>
+      <div id="pvMeta" style="font-size:13.5px;color:var(--ink-soft);line-height:1.9"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit metadata modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Edit document</h3><button class="close-x" data-close="editOverlay"><svg class="i" data-lucide="x"></svg></button></div>
+    <div class="modal-body">
+      <div class="field"><label>Name</label><input id="edName"></div>
+      <div class="field"><label>Document number</label><input id="edDocNum"></div>
+      <div class="field"><label>Description</label><textarea id="edDesc" rows="3"></textarea></div>
+      <div class="field"><label>Company</label><select id="edCompany"></select></div>
+      <div class="field"><label>Category</label><select id="edCategory"></select></div>
+      <div class="field"><label>Tags (comma separated)</label><input id="edTags"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="editOverlay">Cancel</button>
+      <button class="btn btn-primary" id="saveEditBtn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="overlay" id="shareOverlay">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Share document</h3><button class="close-x" data-close="shareOverlay"><svg class="i" data-lucide="x"></svg></button></div>
+    <div class="modal-body">
+      <div class="field"><label>Share with (email of an existing member)</label><input id="shEmail" placeholder="name@company.com"></div>
+      <div class="field"><label>Permission</label><select id="shPerm"><option value="view">View only</option><option value="download">View &amp; download</option></select></div>
+      <div class="field"><label>Expires</label><select id="shExpiry"><option value="0">No expiry</option><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option></select></div>
+      <button class="btn btn-primary btn-block" id="shCreateBtn">Create share</button>
+      <div id="shList" style="margin-top:18px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-body" style="padding-top:22px">
+      <h3 class="modal-title" id="confirmTitle" style="margin-bottom:8px">Are you sure?</h3>
+      <p id="confirmMsg" style="color:var(--muted);font-size:13.5px"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="confirmOverlay">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- New category / company modal (simple generic) -->
+<div class="overlay" id="simpleFormOverlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h3 class="modal-title" id="sfTitle">New item</h3><button class="close-x" data-close="simpleFormOverlay"><svg class="i" data-lucide="x"></svg></button></div>
+    <div class="modal-body">
+      <div class="field"><label id="sfLabel">Name</label><input id="sfInput"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="simpleFormOverlay">Cancel</button>
+      <button class="btn btn-primary" id="sfSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="mobile-nav" id="mobileNav"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut, signInAnonymously
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection,
+  query, where, orderBy, limit, onSnapshot, getDocs, serverTimestamp, arrayUnion, arrayRemove
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+/* =========================================================
+   1. FIREBASE CONFIG — replace with your project's config
+   (Firebase console → Project settings → General → Your apps)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyA9myKzH_tKddCZrIsgaGF0CKdhqnYnr-M",
+  authDomain: "vault-92067.firebaseapp.com",
+  projectId: "vault-92067",
+  storageBucket: "vault-92067.firebasestorage.app",
+  messagingSenderId: "381423340002",
+  appId: "1:381423340002:web:5eb0481062f7c79ed391bb"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
+
+/* =========================================================
+   2. Default companies + categories (seeded once, see README)
+   ========================================================= */
+const DEFAULT_COMPANIES = [
+  { id: "al-madhi-carpentry", name: "Al Madhi Carpentry" },
+  { id: "bilal-ahmed-hardware", name: "Bilal Ahmed Hardware & Elect. Tr." },
+  { id: "al-farasha-al-khadhra", name: "Al Farasha Al Khadhra Bldg. Mat. Tr." },
+  { id: "zawar-hussain-wood", name: "Zawar Hussain Wood Ind. LLC." }
+];
+const DEFAULT_CATEGORIES = ["Trade License","VAT & Tax","Banking","Invoices","Suppliers","Customers","Employees","Contracts & Agreements","Insurance","Customs & Shipping","Vehicles","Properties","Government Documents","Other"];
+
+/* =========================================================
+   3. State
+   ========================================================= */
+let currentUser = null;      // firebase auth user
+let profile = null;          // { name, email, isSuperAdmin, access: { companyId: {role, canDownload, canShare} } }
+let companies = [];          // companies user can see
+let allCompanies = [];       // full list (for super admin, and for upload/edit selects)
+let categoriesByCompany = {};// companyId -> [ {id,name} ]
+let docsCache = [];          // live documents for accessible companies
+let unsubDocs = null;
+let currentView = "home";
+let currentPreviewDoc = null;
+let pendingUploadFiles = [];
+let recentSearches = JSON.parse(localStorage.getItem("cv_recent_searches") || "[]");
+
+/* =========================================================
+   4. Helpers
+   ========================================================= */
+function toast(msg, kind){
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<span>${msg}</span>`;
+  document.getElementById("toastWrap").appendChild(el);
+  setTimeout(()=>el.remove(), 3200);
+}
+function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtBytes(n){ if(!n) return "—"; const u=["B","KB","MB","GB"]; let i=0; while(n>=1024&&i<u.length-1){n/=1024;i++;} return n.toFixed(i?1:0)+" "+u[i]; }
+function fmtDate(ts){ if(!ts) return "—"; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}); }
+function tokenize(str){ return (str||"").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); }
+function myRole(companyId){
+  if (profile?.isSuperAdmin) return "admin";
+  return profile?.access?.[companyId]?.role || null;
+}
+function canUpload(companyId){ const r = myRole(companyId); return r==="admin"||r==="manager"; }
+function canEditOrMove(companyId){ const r = myRole(companyId); return r==="admin"||r==="manager"; }
+function canPermanentDelete(companyId){ return myRole(companyId)==="admin"; }
+function canDownload(companyId){ const r=myRole(companyId); if(r==="admin"||r==="manager") return true; return !!profile?.access?.[companyId]?.canDownload; }
+function canShare(companyId){ const r=myRole(companyId); if(r==="admin"||r==="manager") return true; return !!profile?.access?.[companyId]?.canShare; }
+function companyName(id){ return (allCompanies.find(c=>c.id===id)||{}).name || id; }
+function fileTypeIcon(type){
+  if(!type) return "file";
+  if(type.includes("pdf")) return "file-text";
+  if(type.includes("image")) return "image";
+  if(type.includes("sheet")||type.includes("excel")) return "file-spreadsheet";
+  if(type.includes("word")||type.includes("document")) return "file-type";
+  return "file";
+}
+function logActivity(companyId, docId, action, details){
+  addDoc(collection(db,"activity"), {
+    companyId, docId: docId||null, action, details: details||"",
+    userId: currentUser.uid, userName: profile.name || currentUser.email,
+    timestamp: serverTimestamp()
+  }).catch(()=>{});
+}
+function addRecentlyViewed(docId){
+  let arr = JSON.parse(localStorage.getItem("cv_recent_viewed")||"[]");
+  arr = [docId, ...arr.filter(x=>x!==docId)].slice(0,20);
+  localStorage.setItem("cv_recent_viewed", JSON.stringify(arr));
+}
+
+/* =========================================================
+   5. Auth — no login screen. Every visitor is auto-signed-in
+   anonymously and auto-granted full access. Fine for solo use/
+   preview; anyone with the link has full access while this is on.
+   ========================================================= */
+document.getElementById("signOutBtn").onclick = ()=> signOut(auth);
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    signInAnonymously(auth).catch((e)=> console.error("Anonymous sign-in failed:", e));
+    return;
+  }
+  currentUser = user;
+  const snap = await getDoc(doc(db,"users",user.uid));
+  if(!snap.exists()){
+    await setDoc(doc(db,"users",user.uid), { name:"Test Admin", email:"(test mode — no login)", isSuperAdmin:true, access:{}, createdAt: serverTimestamp() });
+    profile = { name:"Test Admin", email:"(test mode — no login)", isSuperAdmin:true, access:{} };
+  } else {
+    profile = snap.data();
+  }
+  document.getElementById("app").style.display="block";
+  document.getElementById("meName").textContent = profile.name;
+  document.getElementById("meEmail").textContent = "Auth disabled — test mode";
+  await bootData();
+  renderView("home");
+});
+
+/* =========================================================
+   6. Bootstrap companies / categories / live documents
+   ========================================================= */
+async function bootData(){
+  const compSnap = await getDocs(collection(db,"companies"));
+  allCompanies = compSnap.docs.map(d=>({id:d.id, ...d.data()}));
+  if(allCompanies.length===0){
+    // first run — seed defaults (only works if rules permit; otherwise admin seeds via console, see README)
+    for(const c of DEFAULT_COMPANIES){
+      try{ await setDoc(doc(db,"companies",c.id), {name:c.name, createdAt: serverTimestamp()}); }catch(e){}
+    }
+    const s2 = await getDocs(collection(db,"companies"));
+    allCompanies = s2.docs.map(d=>({id:d.id, ...d.data()}));
+  }
+  companies = profile.isSuperAdmin ? allCompanies : allCompanies.filter(c=>profile.access?.[c.id]);
+
+  categoriesByCompany = {};
+  for(const c of allCompanies){
+    const catSnap = await getDocs(collection(db,"companies",c.id,"categories"));
+    let cats = catSnap.docs.map(d=>({id:d.id,...d.data()}));
+    if(cats.length===0){
+      for(const name of DEFAULT_CATEGORIES){
+        try{ await addDoc(collection(db,"companies",c.id,"categories"), {name}); }catch(e){}
+      }
+      const s2 = await getDocs(collection(db,"companies",c.id,"categories"));
+      cats = s2.docs.map(d=>({id:d.id,...d.data()}));
+    }
+    categoriesByCompany[c.id] = cats;
+  }
+
+  if(unsubDocs) unsubDocs();
+  const compIds = companies.map(c=>c.id);
+  if(compIds.length===0){ docsCache=[]; return; }
+  // Firestore 'in' supports up to 30 values — fine for 4 companies.
+  const qy = query(collection(db,"documents"), where("companyId","in",compIds));
+  unsubDocs = onSnapshot(qy, (snap)=>{
+    docsCache = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if(["home","alldocs","companies","starred","recent","trash"].includes(currentView) || currentView.startsWith("company:")) {
+      renderView(currentView, false);
+    }
+  });
+}
+
+/* =========================================================
+   7. Navigation / view rendering
+   ========================================================= */
+const viewRoot = document.getElementById("viewRoot");
+const viewTitle = document.getElementById("viewTitle");
+const viewSub = document.getElementById("viewSub");
+
+function setActiveNav(view){
+  document.querySelectorAll("#navMain button, #mobileNav button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.view===view || (view.startsWith("company:") && b.dataset.view==="companies"));
+  });
+}
+
+function renderView(view, scroll=true){
+  currentView = view;
+  setActiveNav(view);
+  closeSidebarMobile();
+  if(scroll) window.scrollTo(0,0);
+  const titles = {
+    home:["Home",""], alldocs:["All Documents","Search and browse across every company you can access"],
+    companies:["Companies","Switch between workspaces"], categories:["Categories","Manage document categories per company"],
+    starred:["Starred","Documents you've marked as important"], recent:["Recently Viewed","Documents you opened recently"],
+    trash:["Trash","Deleted documents — restore or permanently remove"], team:["Team & Access","Who can see what"],
+    activity:["Activity Log","Uploads, edits, shares and deletions"], settings:["Settings",""]
+  };
+  if(view.startsWith("company:")){
+    const cid = view.split(":")[1];
+    viewTitle.textContent = companyName(cid); viewSub.textContent = "";
+    viewRoot.innerHTML = renderDocList(docsForCompany(cid), {companyId:cid});
+    bindDocRows();
+    return;
+  }
+  const t = titles[view] || ["",""];
+  viewTitle.textContent = t[0]; viewSub.textContent = t[1];
+  const renderers = { home:renderHome, alldocs:renderAllDocs, companies:renderCompanies, categories:renderCategories,
+    starred:renderStarred, recent:renderRecent, trash:renderTrash, team:renderTeam, activity:renderActivity, settings:renderSettings };
+  viewRoot.innerHTML = (renderers[view]||renderHome)();
+  afterRender(view);
+  lucide.createIcons();
+}
+
+function docsForCompany(cid){ return docsCache.filter(d=>d.companyId===cid && !d.trashed); }
+function activeDocs(){ return docsCache.filter(d=>!d.trashed); }
+
+function renderHome(){
+  const total = activeDocs().length;
+  const recentUp = [...activeDocs()].sort((a,b)=>(b.uploadedAt?.seconds||0)-(a.uploadedAt?.seconds||0)).slice(0,6);
+  const starred = activeDocs().filter(d=>(d.starredBy||[]).includes(currentUser.uid)).slice(0,6);
+  return `
+    <div class="grid grid-4" style="margin-bottom:8px">
+      <div class="card"><div class="stat-label">Total Documents</div><div class="stat-value">${total}</div></div>
+      ${companies.slice(0,3).map(c=>`<div class="card"><div class="stat-label">${esc(c.name)}</div><div class="stat-value">${docsForCompany(c.id).length}</div></div>`).join("")}
+    </div>
+    <div class="section-title"><svg class="i" data-lucide="building-2"></svg>Companies</div>
+    <div class="grid grid-4">
+      ${companies.map(c=>`
+        <div class="card company-card" data-goto="company:${c.id}">
+          <div class="company-avatar">${esc(c.name.slice(0,2).toUpperCase())}</div>
+          <div><div class="company-name">${esc(c.name)}</div><div class="company-meta">${docsForCompany(c.id).length} documents</div></div>
+        </div>`).join("") || emptyState("building-2","No companies yet","Ask an admin to add one under Companies.")}
+    </div>
+    <div class="section-title"><svg class="i" data-lucide="clock"></svg>Recently Uploaded</div>
+    ${renderDocList(recentUp)}
+    ${starred.length? `<div class="section-title"><svg class="i" data-lucide="star"></svg>Starred</div>${renderDocList(starred)}` : ""}
+  `;
+}
+
+function renderDocList(list, opts){
+  if(!list.length) return emptyState("file-search","No documents found","Try a different search or upload a new document.");
+  return `<div class="doc-list">${list.map(d=>docRow(d)).join("")}</div>`;
+}
+function docRow(d){
+  const canDL = canDownload(d.companyId);
+  const isStar = (d.starredBy||[]).includes(currentUser.uid);
+  return `
+    <div class="doc-row" data-doc="${d.id}">
+      <div class="doc-icon"><svg class="i" data-lucide="${fileTypeIcon(d.fileType)}"></svg></div>
+      <div class="doc-main">
+        <div class="doc-name">${esc(d.name)}</div>
+        <div class="doc-meta">
+          <span>${esc(companyName(d.companyId))}</span><span>·</span><span>${esc(d.category||"Other")}</span>
+          <span>·</span><span>${fmtDate(d.uploadedAt)}</span>
+          ${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}
+        </div>
+      </div>
+      <div class="doc-actions">
+        ${isStar?`<span class="icon-btn" title="Starred" style="color:var(--amber)"><svg class="i" data-lucide="star"></svg></span>`:""}
+        ${canDL?`<button class="icon-btn" data-quickdl="${d.id}" title="Download"><svg class="i" data-lucide="download"></svg></button>`:""}
+      </div>
+    </div>`;
+}
+function emptyState(icon,title,sub){
+  return `<div class="empty"><svg class="i" data-lucide="${icon}"></svg><div style="font-weight:640;color:var(--ink-soft)">${esc(title)}</div><div style="font-size:13px;margin-top:2px">${esc(sub)}</div></div>`;
+}
+
+function renderAllDocs(){
+  return `
+    <div class="filters" id="filterBar">
+      <select class="chip-select" id="fCompany"><option value="">All companies</option>${companies.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+      <select class="chip-select" id="fCategory"><option value="">All categories</option></select>
+      <select class="chip-select" id="fSort"><option value="new">Newest</option><option value="old">Oldest</option><option value="name">Name A–Z</option></select>
+    </div>
+    <div id="searchSuggest" style="margin-bottom:12px;display:${recentSearches.length?'flex':'none'};gap:6px;flex-wrap:wrap">
+      ${recentSearches.slice(0,6).map(s=>`<button class="chip" data-recent="${esc(s)}">${esc(s)}</button>`).join("")}
+    </div>
+    <div id="allDocsList"></div>
+  `;
+}
+
+function renderCompanies(){
+  const canAdd = profile.isSuperAdmin;
+  return `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      ${canAdd? `<button class="btn btn-primary" id="addCompanyBtn"><svg class="i" data-lucide="plus"></svg>Add company</button>`:""}
+    </div>
+    <div class="grid grid-4">
+      ${allCompanies.map(c=>{
+        const has = companies.find(x=>x.id===c.id);
+        return `<div class="card company-card" style="${has?'':'opacity:.45;cursor:default'}" ${has?`data-goto="company:${c.id}"`:''}>
+          <div class="company-avatar">${esc(c.name.slice(0,2).toUpperCase())}</div>
+          <div><div class="company-name">${esc(c.name)}</div><div class="company-meta">${has? docsForCompany(c.id).length+' documents' : 'No access'}</div></div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
+function renderCategories(){
+  return `
+    <div class="field" style="max-width:280px"><label>Company</label><select id="catCompanySel">${companies.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></div>
+    <div id="catList"></div>
+  `;
+}
+function drawCategoryList(cid){
+  const cats = categoriesByCompany[cid]||[];
+  const canManage = canEditOrMove(cid);
+  document.getElementById("catList").innerHTML = `
+    ${canManage? `<button class="btn btn-ghost" id="addCatBtn" style="margin-bottom:14px"><svg class="i" data-lucide="plus"></svg>New category</button>`:""}
+    <div class="doc-list">${cats.map(c=>{
+      const count = docsForCompany(cid).filter(d=>d.category===c.name).length;
+      return `<div class="doc-row" style="cursor:default">
+        <div class="doc-icon"><svg class="i" data-lucide="folder"></svg></div>
+        <div class="doc-main"><div class="doc-name">${esc(c.name)}</div><div class="doc-meta"><span>${count} documents</span></div></div>
+      </div>`;
+    }).join("")}</div>`;
+  lucide.createIcons();
+  if(canManage){
+    document.getElementById("addCatBtn").onclick = ()=> openSimpleForm("New category","Category name", async(val)=>{
+      if(!val) return;
+      await addDoc(collection(db,"companies",cid,"categories"), {name:val});
+      const s = await getDocs(collection(db,"companies",cid,"categories"));
+      categoriesByCompany[cid] = s.docs.map(d=>({id:d.id,...d.data()}));
+      drawCategoryList(cid);
+      toast("Category added.");
+    });
+  }
+}
+
+function renderStarred(){ return renderDocList(activeDocs().filter(d=>(d.starredBy||[]).includes(currentUser.uid))); }
+function renderRecent(){
+  const ids = JSON.parse(localStorage.getItem("cv_recent_viewed")||"[]");
+  const list = ids.map(id=>docsCache.find(d=>d.id===id)).filter(Boolean).filter(d=>!d.trashed);
+  return renderDocList(list);
+}
+function renderTrash(){
+  const list = docsCache.filter(d=>d.trashed);
+  if(!list.length) return emptyState("trash-2","Trash is empty","Deleted documents appear here.");
+  return `<div class="doc-list">${list.map(d=>`
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-icon"><svg class="i" data-lucide="${fileTypeIcon(d.fileType)}"></svg></div>
+      <div class="doc-main"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta"><span>${esc(companyName(d.companyId))}</span><span>·</span><span>Deleted ${fmtDate(d.trashedAt)}</span></div></div>
+      <div class="doc-actions">
+        <button class="icon-btn" data-restore="${d.id}" title="Restore"><svg class="i" data-lucide="rotate-ccw"></svg></button>
+        ${canPermanentDelete(d.companyId)?`<button class="icon-btn" data-purge="${d.id}" title="Delete forever"><svg class="i" data-lucide="x"></svg></button>`:""}
+      </div>
+    </div>`).join("")}</div>`;
+}
+
+function renderTeam(){
+  if(!profile.isSuperAdmin) return `<div class="card">Only Owners/Admins can manage team access. Contact your admin to change your permissions.</div>`;
+  return `<div id="teamList" class="card"><div class="skeleton sk-row"></div></div>`;
+}
+async function drawTeam(){
+  const snap = await getDocs(collection(db,"users"));
+  const users = snap.docs.map(d=>({id:d.id,...d.data()}));
+  document.getElementById("teamList").innerHTML = users.map(u=>`
+    <div class="member-row">
+      <div class="avatar-round">${esc((u.name||u.email||"?").slice(0,1).toUpperCase())}</div>
+      <div style="flex:1">
+        <div style="font-weight:620">${esc(u.name||u.email)} ${u.isSuperAdmin?'<span class="badge-role">Owner/Admin</span>':''}</div>
+        <div style="color:var(--muted);font-size:12.5px">${esc(u.email)}</div>
+        ${!u.isSuperAdmin? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          ${allCompanies.map(c=>{
+            const acc = (u.access||{})[c.id];
+            return `<div style="border:1px solid var(--line-strong);border-radius:10px;padding:6px 9px;font-size:12px">
+              <div style="font-weight:600;margin-bottom:3px">${esc(c.name)}</div>
+              <select data-access-uid="${u.id}" data-access-cid="${c.id}" style="font-size:12px;border:1px solid var(--line);border-radius:7px">
+                <option value="" ${!acc?'selected':''}>No access</option>
+                <option value="manager" ${acc?.role==='manager'?'selected':''}>Manager</option>
+                <option value="member" ${acc?.role==='member'?'selected':''}>Member</option>
+              </select>
+            </div>`;
+          }).join("")}
+        </div>`:''}
+      </div>
+    </div>`).join("");
+  document.querySelectorAll("[data-access-uid]").forEach(sel=>{
+    sel.onchange = async ()=>{
+      const uid = sel.dataset.accessUid, cid = sel.dataset.accessCid, val = sel.value;
+      const uref = doc(db,"users",uid);
+      const usnap = await getDoc(uref);
+      const access = usnap.data().access || {};
+      if(val) access[cid] = { role: val, canDownload:true, canShare:true }; else delete access[cid];
+      await updateDoc(uref, { access });
+      toast("Access updated.");
+    };
+  });
+}
+
+function renderActivity(){ return `<div id="activityList" class="doc-list"><div class="skeleton sk-row"></div></div>`; }
+async function drawActivity(){
+  const compIds = companies.map(c=>c.id);
+  if(!compIds.length){ document.getElementById("activityList").innerHTML = emptyState("activity","No activity yet",""); return; }
+  const qy = query(collection(db,"activity"), where("companyId","in",compIds), orderBy("timestamp","desc"), limit(50));
+  const snap = await getDocs(qy);
+  const rows = snap.docs.map(d=>d.data());
+  document.getElementById("activityList").innerHTML = rows.length ? rows.map(a=>`
+    <div class="doc-row" style="cursor:default">
+      <div class="doc-icon"><svg class="i" data-lucide="activity"></svg></div>
+      <div class="doc-main"><div class="doc-name">${esc(a.userName)} — ${esc(a.action)}</div>
+      <div class="doc-meta"><span>${esc(companyName(a.companyId))}</span><span>·</span><span>${fmtDate(a.timestamp)}</span>${a.details?`<span>· ${esc(a.details)}</span>`:''}</div></div>
+    </div>`).join("") : emptyState("activity","No activity yet","");
+  lucide.createIcons();
+}
+
+function renderSettings(){
+  return `<div class="card" style="max-width:460px">
+    <div style="font-weight:660;margin-bottom:10px">Account</div>
+    <div style="font-size:13.5px;color:var(--ink-soft);line-height:2">
+      Name: ${esc(profile.name)}<br>Email: ${esc(profile.email)}<br>
+      Role: ${profile.isSuperAdmin? 'Owner / Admin' : Object.entries(profile.access||{}).map(([cid,a])=>`${companyName(cid)}: ${a.role}`).join(", ")||"—"}
+    </div>
+  </div>`;
+}
+
+function afterRender(view){
+  if(view==="alldocs"){ bindAllDocsFilters(); runAllDocsSearch(""); }
+  if(view==="categories"){
+    const sel = document.getElementById("catCompanySel");
+    sel.onchange = ()=> drawCategoryList(sel.value);
+    if(companies[0]) drawCategoryList(companies[0].id);
+  }
+  if(view==="team") drawTeam();
+  if(view==="activity") drawActivity();
+  if(view==="companies" && profile.isSuperAdmin){
+    document.getElementById("addCompanyBtn").onclick = ()=> openSimpleForm("New company","Company name", async(val)=>{
+      if(!val) return;
+      const id = val.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+      await setDoc(doc(db,"companies",id), {name:val, createdAt: serverTimestamp()});
+      await bootData(); renderView("companies");
+      toast("Company added.");
+    });
+  }
+  bindDocRows();
+}
+
+function bindDocRows(){
+  document.querySelectorAll("[data-goto]").forEach(el=> el.onclick = ()=> renderView(el.dataset.goto));
+  document.querySelectorAll("[data-doc]").forEach(el=> el.onclick = (e)=>{
+    if(e.target.closest("[data-quickdl]")) return;
+    openPreview(el.dataset.doc);
+  });
+  document.querySelectorAll("[data-quickdl]").forEach(el=> el.onclick = (e)=>{ e.stopPropagation(); quickDownload(el.dataset.quickdl); });
+  document.querySelectorAll("[data-restore]").forEach(el=> el.onclick = ()=> restoreDoc(el.dataset.restore));
+  document.querySelectorAll("[data-purge]").forEach(el=> el.onclick = ()=> confirmAction("Delete forever?","This permanently removes the file and cannot be undone.", ()=>purgeDoc(el.dataset.purge)));
+}
+
+/* =========================================================
+   8. Global + All Documents search
+   ========================================================= */
+function bindAllDocsFilters(){
+  document.getElementById("fCompany").onchange = ()=>{
+    const cid = document.getElementById("fCompany").value;
+    const catSel = document.getElementById("fCategory");
+    catSel.innerHTML = `<option value="">All categories</option>` + (categoriesByCompany[cid]||[]).map(c=>`<option>${esc(c.name)}</option>`).join("");
+    runAllDocsSearch(document.getElementById("globalSearch").value);
+  };
+  document.getElementById("fCategory").onchange = ()=> runAllDocsSearch(document.getElementById("globalSearch").value);
+  document.getElementById("fSort").onchange = ()=> runAllDocsSearch(document.getElementById("globalSearch").value);
+  document.querySelectorAll("[data-recent]").forEach(b=> b.onclick = ()=>{
+    document.getElementById("globalSearch").value = b.dataset.recent;
+    runAllDocsSearch(b.dataset.recent);
+  });
+}
+function runAllDocsSearch(term){
+  const cid = document.getElementById("fCompany")?.value || "";
+  const cat = document.getElementById("fCategory")?.value || "";
+  const sortBy = document.getElementById("fSort")?.value || "new";
+  let list = activeDocs();
+  if(cid) list = list.filter(d=>d.companyId===cid);
+  if(cat) list = list.filter(d=>d.category===cat);
+  const t = (term||"").trim().toLowerCase();
+  if(t){
+    const tokens = tokenize(t);
+    list = list.filter(d=>{
+      const hay = [d.name, d.docNumber, d.description, d.originalFilename, companyName(d.companyId), d.category, ...(d.tags||[])].join(" ").toLowerCase();
+      return tokens.every(tok => hay.includes(tok));
+    });
+  }
+  list.sort((a,b)=>{
+    if(sortBy==="name") return (a.name||"").localeCompare(b.name||"");
+    const at=a.uploadedAt?.seconds||0, bt=b.uploadedAt?.seconds||0;
+    return sortBy==="old" ? at-bt : bt-at;
+  });
+  const target = document.getElementById("allDocsList");
+  if(target) target.innerHTML = renderDocList(list);
+  bindDocRows();
+}
+let searchDebounce;
+document.getElementById("globalSearch").addEventListener("input", (e)=>{
+  clearTimeout(searchDebounce);
+  const val = e.target.value;
+  searchDebounce = setTimeout(()=>{
+    if(currentView!=="alldocs"){ renderView("alldocs"); setTimeout(()=>{ document.getElementById("globalSearch").value = val; runAllDocsSearch(val); },0); }
+    else runAllDocsSearch(val);
+    if(val.trim() && !recentSearches.includes(val.trim())){
+      recentSearches = [val.trim(), ...recentSearches].slice(0,8);
+      localStorage.setItem("cv_recent_searches", JSON.stringify(recentSearches));
+    }
+  }, 220);
+});
+
+/* =========================================================
+   9. Upload flow
+   ========================================================= */
+const uploadOverlay = document.getElementById("uploadOverlay");
+function openUpload(){
+  const upCompany = document.getElementById("upCompany");
+  upCompany.innerHTML = companies.filter(c=>canUpload(c.id)).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  if(!upCompany.options.length){ toast("You don't have upload permission in any company."); return; }
+  fillUploadCategories();
+  upCompany.onchange = fillUploadCategories;
+  pendingUploadFiles = [];
+  document.getElementById("fileList").innerHTML = "";
+  openModal("uploadOverlay");
+}
+function fillUploadCategories(){
+  const cid = document.getElementById("upCompany").value;
+  document.getElementById("upCategory").innerHTML = (categoriesByCompany[cid]||[]).map(c=>`<option>${esc(c.name)}</option>`).join("");
+}
+document.getElementById("quickUploadBtn").onclick = openUpload;
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+dropzone.onclick = ()=> fileInput.click();
+["dragenter","dragover"].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add("drag"); }));
+["dragleave","drop"].forEach(ev=> dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove("drag"); }));
+dropzone.addEventListener("drop", e=> addFiles(e.dataTransfer.files));
+fileInput.onchange = ()=> addFiles(fileInput.files);
+
+function addFiles(files){
+  for(const f of files) pendingUploadFiles.push({file:f, status:"queued", pct:0});
+  drawFileList();
+}
+function drawFileList(){
+  document.getElementById("fileList").innerHTML = pendingUploadFiles.map((pf,i)=>`
+    <div class="file-item" data-i="${i}">
+      <svg class="i" data-lucide="${fileTypeIcon(pf.file.type)}"></svg>
+      <span class="name">${esc(pf.file.name)}</span>
+      <span style="color:var(--muted);font-size:12px;flex-shrink:0">${fmtBytes(pf.file.size)}</span>
+      <div class="progress"><div class="progress-bar" style="width:${pf.pct}%"></div></div>
+      <span class="${pf.status==='done'?'status-ok':pf.status==='error'?'status-err':''}" style="flex-shrink:0;font-size:12px;width:56px;text-align:right">
+        ${pf.status==='done'?'Done':pf.status==='error'?'Retry':pf.status==='uploading'?pf.pct+'%':'Queued'}
+      </span>
+    </div>`).join("");
+  lucide.createIcons();
+  document.querySelectorAll(".file-item .status-err").forEach(el=> el.parentElement.onclick = ()=>{
+    const i = el.parentElement.dataset.i; uploadOne(pendingUploadFiles[i], i);
+  });
+}
+document.getElementById("startUploadBtn").onclick = async ()=>{
+  if(!pendingUploadFiles.length){ toast("Add at least one file."); return; }
+  const cid = document.getElementById("upCompany").value;
+  if(!canUpload(cid)){ toast("You don't have upload permission for this company."); return; }
+  for(let i=0;i<pendingUploadFiles.length;i++){
+    if(pendingUploadFiles[i].status!=="done") await uploadOne(pendingUploadFiles[i], i);
+  }
+  toast("Upload complete.");
+};
+async function uploadOne(pf, i){
+  pf.status="uploading"; pf.pct=0; drawFileList();
+  const cid = document.getElementById("upCompany").value;
+  const category = document.getElementById("upCategory").value;
+  const tags = document.getElementById("upTags").value.split(",").map(s=>s.trim()).filter(Boolean);
+  const docId = crypto.randomUUID();
+  const storagePath = `companies/${cid}/${docId}/${pf.file.name}`;
+  try{
+    const sref = ref(storage, storagePath);
+    const task = uploadBytesResumable(sref, pf.file);
+    await new Promise((resolve,reject)=>{
+      task.on("state_changed",
+        (snap)=>{ pf.pct = Math.round(snap.bytesTransferred/snap.totalBytes*100); drawFileList(); },
+        (err)=> reject(err),
+        ()=> resolve()
+      );
+    });
+    const nameOnly = pf.file.name.replace(/\.[^.]+$/,"");
+    await setDoc(doc(db,"documents",docId), {
+      companyId: cid, category, name: nameOnly, docNumber:"", description:"",
+      originalFilename: pf.file.name, fileType: pf.file.type||"application/octet-stream", fileSize: pf.file.size,
+      storagePath, tags, starredBy:[], trashed:false,
+      uploadedBy: currentUser.uid, uploadedByName: profile.name||currentUser.email,
+      uploadedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      searchTokens: [...tokenize(nameOnly), ...tokenize(pf.file.name), ...tags.flatMap(tokenize)]
+    });
+    logActivity(cid, docId, "Uploaded", nameOnly);
+    pf.status="done"; pf.pct=100;
+  }catch(e){
+    pf.status="error"; console.error(e);
+  }
+  drawFileList();
+}
+
+/* =========================================================
+   10. Preview / actions
+   ========================================================= */
+async function openPreview(docId){
+  const d = docsCache.find(x=>x.id===docId);
+  if(!d) return;
+  currentPreviewDoc = d;
+  addRecentlyViewed(docId);
+  document.getElementById("pvName").textContent = d.name;
+  document.getElementById("pvStarTxt").textContent = (d.starredBy||[]).includes(currentUser.uid) ? "Unstar" : "Star";
+  document.getElementById("pvMeta").innerHTML = `
+    <div><strong>Company:</strong> ${esc(companyName(d.companyId))}</div>
+    <div><strong>Category:</strong> ${esc(d.category||"—")}</div>
+    <div><strong>Document #:</strong> ${esc(d.docNumber||"—")}</div>
+    <div><strong>Description:</strong> ${esc(d.description||"—")}</div>
+    <div><strong>Tags:</strong> ${(d.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join(" ")||"—"}</div>
+    <div><strong>Uploaded by:</strong> ${esc(d.uploadedByName)} on ${fmtDate(d.uploadedAt)}</div>
+    <div><strong>File:</strong> ${esc(d.originalFilename)} (${fmtBytes(d.fileSize)})</div>
+  `;
+  const area = document.getElementById("pvArea");
+  area.innerHTML = `<div class="skeleton" style="width:100%;height:260px"></div>`;
+  try{
+    const url = await getDownloadURL(ref(storage, d.storagePath));
+    d._url = url;
+    if((d.fileType||"").includes("image")) area.innerHTML = `<img src="${url}">`;
+    else if((d.fileType||"").includes("pdf")) area.innerHTML = `<iframe src="${url}"></iframe>`;
+    else area.innerHTML = `<div class="empty"><svg class="i" data-lucide="file"></svg><div>No inline preview for this file type.</div><div style="font-size:12px">Use Download to open it.</div></div>`;
+  }catch(e){ area.innerHTML = `<div class="empty">Couldn't load preview.</div>`; }
+  lucide.createIcons();
+  openModal("previewOverlay");
+}
+document.getElementById("pvDownload").onclick = ()=>{ if(currentPreviewDoc?._url) window.open(currentPreviewDoc._url,"_blank"); };
+document.getElementById("pvPrint").onclick = ()=>{ if(currentPreviewDoc?._url){ const w=window.open(currentPreviewDoc._url,"_blank"); if(w) w.onload=()=>w.print(); } };
+document.getElementById("pvStar").onclick = async ()=>{
+  const d = currentPreviewDoc; const uid = currentUser.uid;
+  const isStar = (d.starredBy||[]).includes(uid);
+  await updateDoc(doc(db,"documents",d.id), { starredBy: isStar? arrayRemove(uid) : arrayUnion(uid) });
+  toast(isStar? "Removed from starred.":"Added to starred.");
+  document.getElementById("pvStarTxt").textContent = isStar? "Star":"Unstar";
+};
+document.getElementById("pvShare").onclick = ()=> openShare();
+document.getElementById("pvEdit").onclick = ()=> openEdit();
+document.getElementById("pvDelete").onclick = ()=> confirmAction("Move to trash?","You can restore it later from Trash.", ()=> trashDoc(currentPreviewDoc.id));
+
+function quickDownload(docId){
+  getDownloadURL(ref(storage, docsCache.find(d=>d.id===docId).storagePath)).then(url=> window.open(url,"_blank"));
+}
+async function trashDoc(docId){
+  const d = docsCache.find(x=>x.id===docId);
+  await updateDoc(doc(db,"documents",docId), { trashed:true, trashedAt: serverTimestamp() });
+  logActivity(d.companyId, docId, "Moved to trash", d.name);
+  closeModal("previewOverlay"); toast("Moved to trash.");
+}
+async function restoreDoc(docId){
+  const d = docsCache.find(x=>x.id===docId);
+  await updateDoc(doc(db,"documents",docId), { trashed:false, trashedAt:null });
+  logActivity(d.companyId, docId, "Restored", d.name);
+  toast("Restored.");
+}
+async function purgeDoc(docId){
+  const d = docsCache.find(x=>x.id===docId);
+  try{ await deleteObject(ref(storage, d.storagePath)); }catch(e){}
+  await deleteDoc(doc(db,"documents",docId));
+  logActivity(d.companyId, null, "Permanently deleted", d.name);
+  toast("Permanently deleted.");
+}
+
+/* Edit metadata */
+function openEdit(){
+  const d = currentPreviewDoc;
+  document.getElementById("edName").value = d.name;
+  document.getElementById("edDocNum").value = d.docNumber||"";
+  document.getElementById("edDesc").value = d.description||"";
+  document.getElementById("edTags").value = (d.tags||[]).join(", ");
+  const edCompany = document.getElementById("edCompany");
+  edCompany.innerHTML = companies.filter(c=>canEditOrMove(c.id)).map(c=>`<option value="${c.id}" ${c.id===d.companyId?'selected':''}>${esc(c.name)}</option>`).join("");
+  const fillCats = ()=>{
+    document.getElementById("edCategory").innerHTML = (categoriesByCompany[edCompany.value]||[]).map(c=>`<option ${c.name===d.category?'selected':''}>${esc(c.name)}</option>`).join("");
+  };
+  edCompany.onchange = fillCats; fillCats();
+  closeModal("previewOverlay");
+  openModal("editOverlay");
+}
+document.getElementById("saveEditBtn").onclick = async ()=>{
+  const d = currentPreviewDoc;
+  const name = document.getElementById("edName").value.trim();
+  const tags = document.getElementById("edTags").value.split(",").map(s=>s.trim()).filter(Boolean);
+  const companyId = document.getElementById("edCompany").value;
+  const category = document.getElementById("edCategory").value;
+  await updateDoc(doc(db,"documents",d.id), {
+    name, docNumber: document.getElementById("edDocNum").value.trim(),
+    description: document.getElementById("edDesc").value.trim(),
+    companyId, category, tags, updatedAt: serverTimestamp(),
+    searchTokens: [...tokenize(name), ...tokenize(d.originalFilename), ...tags.flatMap(tokenize)]
+  });
+  logActivity(companyId, d.id, "Edited metadata", name);
+  closeModal("editOverlay"); toast("Saved.");
+};
+
+/* Share */
+function openShare(){
+  document.getElementById("shList").innerHTML = `<div class="skeleton sk-row"></div>`;
+  openModal("shareOverlay");
+  drawShares();
+}
+async function drawShares(){
+  const d = currentPreviewDoc;
+  const snap = await getDocs(query(collection(db,"shares"), where("docId","==",d.id)));
+  const shares = snap.docs.map(x=>({id:x.id,...x.data()})).filter(s=>!s.revoked);
+  document.getElementById("shList").innerHTML = shares.length? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:6px">Active shares</div>` +
+    shares.map(s=>`<div class="member-row"><div style="flex:1"><div style="font-weight:600;font-size:13.5px">${esc(s.sharedWithEmail)}</div>
+      <div style="color:var(--muted);font-size:12px">${s.permission} ${s.expiresAt? '· expires '+fmtDate(s.expiresAt):''}</div></div>
+      <button class="btn btn-ghost" data-revoke="${s.id}">Revoke</button></div>`).join("") : "";
+  document.querySelectorAll("[data-revoke]").forEach(b=> b.onclick = async ()=>{
+    await updateDoc(doc(db,"shares",b.dataset.revoke), {revoked:true});
+    drawShares(); toast("Access revoked.");
+  });
+}
+document.getElementById("shCreateBtn").onclick = async ()=>{
+  const d = currentPreviewDoc;
+  const email = document.getElementById("shEmail").value.trim().toLowerCase();
+  if(!email){ toast("Enter an email."); return; }
+  const usnap = await getDocs(query(collection(db,"users"), where("email","==",email)));
+  if(usnap.empty){ toast("No member found with that email — they need an account and access first."); return; }
+  const targetUser = usnap.docs[0];
+  const days = parseInt(document.getElementById("shExpiry").value,10);
+  await addDoc(collection(db,"shares"), {
+    docId: d.id, companyId: d.companyId, sharedBy: currentUser.uid,
+    sharedWith: targetUser.id, sharedWithEmail: email,
+    permission: document.getElementById("shPerm").value,
+    expiresAt: days? new Date(Date.now()+days*86400000) : null,
+    revoked:false, createdAt: serverTimestamp()
+  });
+  logActivity(d.companyId, d.id, "Shared", `with ${email}`);
+  document.getElementById("shEmail").value="";
+  drawShares(); toast("Shared.");
+};
+
+/* =========================================================
+   11. Modal / confirm / simple-form plumbing
+   ========================================================= */
+function openModal(id){ document.getElementById(id).classList.add("show"); }
+function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+document.querySelectorAll("[data-close]").forEach(b=> b.onclick = ()=> closeModal(b.dataset.close));
+document.querySelectorAll(".overlay").forEach(o=> o.addEventListener("click", e=>{ if(e.target===o) o.classList.remove("show"); }));
+
+let confirmCb = null;
+function confirmAction(title, msg, cb){
+  document.getElementById("confirmTitle").textContent = title;
+  document.getElementById("confirmMsg").textContent = msg;
+  confirmCb = cb;
+  openModal("confirmOverlay");
+}
+document.getElementById("confirmOkBtn").onclick = ()=>{ closeModal("confirmOverlay"); if(confirmCb) confirmCb(); };
+
+let sfCb = null;
+function openSimpleForm(title, label, cb){
+  document.getElementById("sfTitle").textContent = title;
+  document.getElementById("sfLabel").textContent = label;
+  document.getElementById("sfInput").value = "";
+  sfCb = cb;
+  openModal("simpleFormOverlay");
+}
+document.getElementById("sfSaveBtn").onclick = ()=>{
+  const v = document.getElementById("sfInput").value.trim();
+  closeModal("simpleFormOverlay");
+  if(sfCb) sfCb(v);
+};
+
+/* =========================================================
+   12. Nav wiring + mobile
+   ========================================================= */
+document.getElementById("navMain").addEventListener("click", (e)=>{
+  const b = e.target.closest("button[data-view]"); if(b) renderView(b.dataset.view);
+});
+const mobileNav = document.getElementById("mobileNav");
+mobileNav.innerHTML = ["home","alldocs","companies","starred","trash"].map(v=>{
+  const icons = {home:"layout-dashboard",alldocs:"files",companies:"building-2",starred:"star",trash:"trash-2"};
+  const labels = {home:"Home",alldocs:"Docs",companies:"Companies",starred:"Starred",trash:"Trash"};
+  return `<button data-view="${v}"><svg class="i" data-lucide="${icons[v]}"></svg>${labels[v]}</button>`;
+}).join("");
+mobileNav.addEventListener("click", (e)=>{ const b=e.target.closest("button[data-view]"); if(b) renderView(b.dataset.view); });
+
+const side = document.getElementById("side");
+const scrim = document.getElementById("scrim");
+document.getElementById("hamburger").onclick = ()=>{ side.classList.add("open"); scrim.classList.add("show"); };
+scrim.onclick = ()=> closeSidebarMobile();
+function closeSidebarMobile(){ side.classList.remove("open"); scrim.classList.remove("show"); }
+
+lucide.createIcons();
+
+/* PWA service worker */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
