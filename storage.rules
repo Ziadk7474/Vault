@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ⚠️ NO-LOGIN MODE — WIDE OPEN. Same situation as firestore.rules:
+    // no sign-in means no request.auth to check, so every file in this
+    // bucket is readable and writable by anyone who has the link. Fine
+    // for solo testing; not fine once real company files or other
+    // people are involved. Real rules are saved in
+    // storage.rules.role-based.bak — ask to have them restored once
+    // login is back on.
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

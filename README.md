@@ -1,23 +1,62 @@
 # CompanyVault — Setup
 
-A real app: Firebase Authentication + Firestore + Cloud Storage, with role-based
-access enforced in security rules (not just hidden buttons). No mock data, no
-localStorage-only "cloud."
+## ⚠️ There is no login at all right now
 
-## 1. Create the Firebase project
+`index.html` has no sign-in step of any kind — it opens straight into the app
+with full access, and `firestore.rules` / `storage.rules` are wide open
+(`allow read, write: if true`) to match, because with no login there's no
+identity for rules to check permissions against.
 
-1. console.firebase.google.com → Add project.
-2. Build → Authentication → get started → enable **Email/Password**.
-3. Build → Firestore Database → create database (production mode, closest region to UAE, e.g. `europe-west1` or `asia-south1`).
-4. Build → Storage → get started (production mode).
-5. Project settings → General → "Your apps" → Add app → Web → copy the config object.
+**This means anyone who has the link (or finds this GitHub repo, since it's
+public) can read, upload, edit, and delete every document.** That's fine
+while it's just you testing on your own device. Once real company documents
+or other staff are involved, this needs to change.
 
-## 2. Paste your config
+**To bring back real login + role-based access**, just ask — the original
+sign-in flow and the Owner/Admin/Manager/Member permission rules are saved
+and ready to restore:
+- `firestore.rules.role-based.bak` and `storage.rules.role-based.bak` in this
+  folder hold the real rules (swap them back in as `firestore.rules` /
+  `storage.rules` and redeploy — step 3 below).
+- The sign-in screen's HTML/JS was removed from `index.html`, not just
+  hidden, so restoring it means adding it back — ask and I'll do it in one
+  message.
+
+
+## Current setup (no-login mode)
+
+You've already done the parts that matter for this mode:
+1. Firebase project created (`vault-92067`), config pasted into `index.html`.
+2. Firestore Database and Storage created in the console (Build → Firestore
+   Database / Build → Storage — if you haven't clicked "Create database" /
+   "Get started" on either yet, do that once; the rules below only work on a
+   database that already exists).
+3. Hosted on GitHub Pages at `ziadk7474.github.io/Vault/`.
+
+**One step left:** paste the current (open) `firestore.rules` into Firebase
+console → Firestore Database → Rules tab → Publish, and the current
+`storage.rules` into Storage → Rules tab → Publish. Until you do that, the
+console's own default rules apply, which usually block everything, so the
+app loads but every action fails.
+
+No Authentication setup is needed in this mode — you can leave the
+Authentication section of the console untouched.
+
+## When you turn login back on
+
+The steps below describe the original, real-authentication setup. They
+don't apply right now, but keep them for later.
+
+### 1. Enable Authentication (skip this while in no-login mode)
+
+1. console.firebase.google.com → your project → Build → Authentication → get started → enable **Email/Password**.
+
+### 2. Paste your config
 
 Open `index.html`, find `firebaseConfig` near the top of the `<script type="module">`
 block, and replace the `REPLACE_ME` values with what you copied.
 
-## 3. Deploy the security rules
+### 3. Deploy the security rules
 
 Install the Firebase CLI once: `npm install -g firebase-tools`, then `firebase login`.
 
@@ -31,7 +70,7 @@ either way works, but **do not skip this step**. Without it Firestore/Storage de
 to locked (good) or, if you ever chose "test mode," wide open (bad) — the rules in this
 repo are what actually implement the Owner/Admin/Manager/Member permissions.
 
-## 4. Create yourself as the first Owner/Admin
+### 4. Create yourself as the first Owner/Admin
 
 The app itself can't grant the very first admin — there'd be nobody to approve them.
 One-time manual step:
@@ -48,7 +87,7 @@ The four companies and the default category list are seeded automatically the fi
 time an Owner/Admin loads the app (see `DEFAULT_COMPANIES` near the top of the script
 if you want to rename or add to them before first load).
 
-## 5. Inviting the team
+### 5. Inviting the team
 
 There's no separate "invite" email flow (that needs a Cloud Function + email service,
 which isn't included — see Known Limitations). Instead:

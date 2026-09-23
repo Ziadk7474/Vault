@@ -174,7 +174,6 @@ select.chip-select{border:1px solid var(--line-strong);background:#fff;border-ra
     <div class="side-foot">
       <strong id="meName">—</strong>
       <span id="meEmail">—</span>
-      <button class="btn btn-ghost btn-block" id="signOutBtn">Sign out</button>
     </div>
   </aside>
 
@@ -309,9 +308,7 @@ select.chip-select{border:1px solid var(--line-strong);background:#fff;border-ra
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged, signOut, signInAnonymously
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+// Authentication removed — no Firebase Auth import, no sign-in step.
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection,
   query, where, orderBy, limit, onSnapshot, getDocs, serverTimestamp, arrayUnion, arrayRemove
@@ -334,7 +331,6 @@ const firebaseConfig = {
 };
 
 const fbApp = initializeApp(firebaseConfig);
-const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const storage = getStorage(fbApp);
 
@@ -410,31 +406,16 @@ function addRecentlyViewed(docId){
 }
 
 /* =========================================================
-   5. Auth — no login screen. Every visitor is auto-signed-in
-   anonymously and auto-granted full access. Fine for solo use/
-   preview; anyone with the link has full access while this is on.
+   5. Startup — no authentication at all. A fixed local "user" is
+   used for the uploadedBy/activity-log fields. Every visitor who
+   opens this page has full admin access (see the open rules files).
    ========================================================= */
-document.getElementById("signOutBtn").onclick = ()=> signOut(auth);
-
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    signInAnonymously(auth).catch((e)=> console.error("Anonymous sign-in failed:", e));
-    return;
-  }
-  currentUser = user;
-  const snap = await getDoc(doc(db,"users",user.uid));
-  if(!snap.exists()){
-    await setDoc(doc(db,"users",user.uid), { name:"Test Admin", email:"(test mode — no login)", isSuperAdmin:true, access:{}, createdAt: serverTimestamp() });
-    profile = { name:"Test Admin", email:"(test mode — no login)", isSuperAdmin:true, access:{} };
-  } else {
-    profile = snap.data();
-  }
-  document.getElementById("app").style.display="block";
-  document.getElementById("meName").textContent = profile.name;
-  document.getElementById("meEmail").textContent = "Auth disabled — test mode";
-  await bootData();
-  renderView("home");
-});
+currentUser = { uid: "local-user" };
+profile = { name: "Admin", email: "(no login)", isSuperAdmin: true, access: {} };
+document.getElementById("app").style.display = "block";
+document.getElementById("meName").textContent = profile.name;
+document.getElementById("meEmail").textContent = "No login";
+bootData().then(()=> renderView("home"));
 
 /* =========================================================
    6. Bootstrap companies / categories / live documents
@@ -657,46 +638,8 @@ function renderTrash(){
 }
 
 function renderTeam(){
-  if(!profile.isSuperAdmin) return `<div class="card">Only Owners/Admins can manage team access. Contact your admin to change your permissions.</div>`;
-  return `<div id="teamList" class="card"><div class="skeleton sk-row"></div></div>`;
+  return `<div class="card">There's no login right now, so everyone who opens this page has full admin access — there are no separate accounts to assign roles to. Team &amp; Access will work again once sign-in is turned back on.</div>`;
 }
-async function drawTeam(){
-  const snap = await getDocs(collection(db,"users"));
-  const users = snap.docs.map(d=>({id:d.id,...d.data()}));
-  document.getElementById("teamList").innerHTML = users.map(u=>`
-    <div class="member-row">
-      <div class="avatar-round">${esc((u.name||u.email||"?").slice(0,1).toUpperCase())}</div>
-      <div style="flex:1">
-        <div style="font-weight:620">${esc(u.name||u.email)} ${u.isSuperAdmin?'<span class="badge-role">Owner/Admin</span>':''}</div>
-        <div style="color:var(--muted);font-size:12.5px">${esc(u.email)}</div>
-        ${!u.isSuperAdmin? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-          ${allCompanies.map(c=>{
-            const acc = (u.access||{})[c.id];
-            return `<div style="border:1px solid var(--line-strong);border-radius:10px;padding:6px 9px;font-size:12px">
-              <div style="font-weight:600;margin-bottom:3px">${esc(c.name)}</div>
-              <select data-access-uid="${u.id}" data-access-cid="${c.id}" style="font-size:12px;border:1px solid var(--line);border-radius:7px">
-                <option value="" ${!acc?'selected':''}>No access</option>
-                <option value="manager" ${acc?.role==='manager'?'selected':''}>Manager</option>
-                <option value="member" ${acc?.role==='member'?'selected':''}>Member</option>
-              </select>
-            </div>`;
-          }).join("")}
-        </div>`:''}
-      </div>
-    </div>`).join("");
-  document.querySelectorAll("[data-access-uid]").forEach(sel=>{
-    sel.onchange = async ()=>{
-      const uid = sel.dataset.accessUid, cid = sel.dataset.accessCid, val = sel.value;
-      const uref = doc(db,"users",uid);
-      const usnap = await getDoc(uref);
-      const access = usnap.data().access || {};
-      if(val) access[cid] = { role: val, canDownload:true, canShare:true }; else delete access[cid];
-      await updateDoc(uref, { access });
-      toast("Access updated.");
-    };
-  });
-}
-
 function renderActivity(){ return `<div id="activityList" class="doc-list"><div class="skeleton sk-row"></div></div>`; }
 async function drawActivity(){
   const compIds = companies.map(c=>c.id);
@@ -730,7 +673,6 @@ function afterRender(view){
     sel.onchange = ()=> drawCategoryList(sel.value);
     if(companies[0]) drawCategoryList(companies[0].id);
   }
-  if(view==="team") drawTeam();
   if(view==="activity") drawActivity();
   if(view==="companies" && profile.isSuperAdmin){
     document.getElementById("addCompanyBtn").onclick = ()=> openSimpleForm("New company","Company name", async(val)=>{

@@ -2,70 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() { return request.auth != null; }
-    function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
-    function isSuperAdmin() { return signedIn() && me().isSuperAdmin == true; }
-    function myAccess(companyId) { return me().access[companyId]; }
-    function hasCompanyAccess(companyId) {
-      return isSuperAdmin() || (signedIn() && ('access' in me()) && companyId in me().access);
-    }
-    function myRole(companyId) {
-      return isSuperAdmin() ? 'admin' : (hasCompanyAccess(companyId) ? myAccess(companyId).role : null);
-    }
-    function canManage(companyId) { return myRole(companyId) == 'admin' || myRole(companyId) == 'manager'; }
-    function canDownload(companyId) {
-      return canManage(companyId) || (hasCompanyAccess(companyId) && myAccess(companyId).canDownload == true);
-    }
-
-    // TEMPORARY TEST MODE: the app currently has no login screen and auto-signs
-    // everyone in anonymously as a full admin, so this rule is relaxed to let a
-    // brand-new (anonymous) uid create its own admin doc. Anyone who opens the
-    // app link during this period has full access. Before real use, change the
-    // "allow create" line back to requiring isSuperAdmin == false (see README).
-    match /users/{uid} {
-      allow get: if signedIn() && (request.auth.uid == uid || isSuperAdmin());
-      allow list: if isSuperAdmin();
-      allow create: if signedIn() && request.auth.uid == uid;
-      allow update: if isSuperAdmin()
-                    || (signedIn() && request.auth.uid == uid
-                        && request.resource.data.isSuperAdmin == resource.data.isSuperAdmin
-                        && request.resource.data.access == resource.data.access);
-      allow delete: if isSuperAdmin();
-    }
-
-    match /companies/{companyId} {
-      allow read: if hasCompanyAccess(companyId);
-      allow create, update, delete: if isSuperAdmin();
-
-      match /categories/{catId} {
-        allow read: if hasCompanyAccess(companyId);
-        allow create, update: if canManage(companyId);
-        allow delete: if isSuperAdmin();
-      }
-    }
-
-    match /documents/{docId} {
-      allow read: if hasCompanyAccess(resource.data.companyId);
-      allow create: if canManage(request.resource.data.companyId)
-                     && request.resource.data.uploadedBy == request.auth.uid;
-      // Editing metadata / moving company: manager+ in BOTH the old and new company.
-      // Trashing/restoring (only 'trashed' and 'trashedAt' change) is allowed to manager+.
-      allow update: if canManage(resource.data.companyId) && canManage(request.resource.data.companyId);
-      // Permanent delete restricted to admin (Owner/Admin) of the document's company.
-      allow delete: if myRole(resource.data.companyId) == 'admin';
-    }
-
-    match /shares/{shareId} {
-      allow read: if signedIn() && (resource.data.sharedBy == request.auth.uid || resource.data.sharedWith == request.auth.uid || isSuperAdmin());
-      allow create: if canManage(request.resource.data.companyId) || (hasCompanyAccess(request.resource.data.companyId) && myAccess(request.resource.data.companyId).canShare == true);
-      allow update: if signedIn() && (resource.data.sharedBy == request.auth.uid || isSuperAdmin()); // revoke only
-      allow delete: if isSuperAdmin();
-    }
-
-    match /activity/{entryId} {
-      allow read: if hasCompanyAccess(resource.data.companyId);
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && hasCompanyAccess(request.resource.data.companyId);
-      allow update, delete: if false; // activity log is append-only
+    // ⚠️ NO-LOGIN MODE — WIDE OPEN.
+    // The app currently has no sign-in step at all, so there is no
+    // request.auth to check permissions against. Anyone who has this
+    // project's config (which is sitting in the public index.html) and
+    // this database's existence can read and write everything below.
+    //
+    // This is fine for you alone testing on your own device. It is NOT
+    // fine once real company documents or other people are involved.
+    //
+    // The real role-based rules (Owner/Admin/Manager/Member, matching
+    // the app's original design) are saved in firestore.rules.role-based.bak
+    // in this same folder. When you're ready to turn login back on, ask
+    // and this file gets swapped back to that version, paired with
+    // re-enabling the sign-in screen in index.html.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
