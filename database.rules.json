@@ -1,0 +1,4 @@
+{"rules":{"spaces":{"$code":{
+".read":"auth != null && root.child('spaces').child($code).child('members').child(auth.uid).exists()",
+".write":"auth != null && (root.child('spaces').child($code).child('members').child(auth.uid).exists() || !root.child('spaces').child($code).exists())",
+"members":{"$uid":{".write":"auth != null && auth.uid === $uid"}}}}}}
